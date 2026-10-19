@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Applicant Tracker (Sample)</title>
+<style>
+:root{--bg:#f6f5f2;--card:#fff;--tx:#1f2328;--mu:#6b7280;--bd:#e3e0d8;--ac:#3b5bdb;--ok:#2f9e44;--bad:#e03131;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#17181b;--card:#222428;--tx:#ecebe8;--mu:#9aa0a8;--bd:#33363c;--ac:#7b93ff;--ok:#51cf66;--bad:#ff6b6b}}
+:root[data-theme="dark"]{--bg:#17181b;--card:#222428;--tx:#ecebe8;--mu:#9aa0a8;--bd:#33363c;--ac:#7b93ff;--ok:#51cf66;--bad:#ff6b6b}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.4 system-ui,sans-serif;padding:16px}
+h1{font-size:20px;margin:0 0 12px}
+.stats{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.stat{background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:8px 12px;min-width:90px}
+.stat b{display:block;font-size:18px}.stat span{color:var(--mu);font-size:12px}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+input,select,textarea,button{font:inherit;color:var(--tx);background:var(--card);border:1px solid var(--bd);border-radius:6px;padding:6px 8px}
+button{cursor:pointer}button.p{background:var(--ac);color:#fff;border-color:var(--ac)}
+.wrap{overflow-x:auto;background:var(--card);border:1px solid var(--bd);border-radius:8px}
+table{border-collapse:collapse;width:100%;min-width:900px}
+th,td{text-align:left;padding:8px;border-bottom:1px solid var(--bd);vertical-align:top}
+th{font-size:12px;color:var(--mu);text-transform:uppercase;cursor:pointer;white-space:nowrap}
+td select{padding:3px 4px;max-width:150px}
+.tag{font-size:11px;padding:2px 6px;border-radius:10px;border:1px solid var(--bd);color:var(--mu)}
+.over{color:var(--bad);font-weight:600}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:12px}
+.modal.on{display:flex}
+.box{background:var(--card);border-radius:10px;padding:16px;width:100%;max-width:560px;max-height:90vh;overflow:auto}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.grid label{display:flex;flex-direction:column;font-size:12px;color:var(--mu);gap:2px}
+.full{grid-column:1/-1}
+.chk{display:flex;gap:10px;flex-wrap:wrap;font-size:13px;color:var(--tx)}.chk label{flex-direction:row;align-items:center;color:var(--tx)}
+a{color:var(--ac)}.mu{color:var(--mu)}
+.tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.board{display:flex;gap:10px;overflow-x:auto;padding-bottom:8px;align-items:flex-start}
+.col{background:var(--card);border:1px solid var(--bd);border-radius:8px;min-width:210px;width:210px;padding:8px}
+.col h4{margin:0 0 8px;font-size:12px;text-transform:uppercase;color:var(--mu);display:flex;justify-content:space-between}
+.col.dz{outline:2px dashed var(--ac)}
+.cd{background:var(--bg);border:1px solid var(--bd);border-radius:6px;padding:8px;margin-bottom:6px;cursor:grab}
+.cd select{width:100%;margin-top:6px;padding:2px 4px;font-size:12px}
+.tpl textarea{width:100%}
+.prev{white-space:pre-wrap;background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:12px;margin-top:8px}
+.pt td,.pt th{text-align:center}.pt td:first-child,.pt th:first-child{text-align:left}
+</style></head><body>
+<h1>Applicant Tracker (Sample)</h1>
+<p style="margin:-6px 0 8px"><a href="index.html">&larr; Back to portfolio</a></p>
+<p class="mu" style="margin:-4px 0 12px">Demo of a hiring pipeline tracker with fictional candidates. Everything you add stays in your own browser.</p>
+<div class="stats" id="stats"></div>
+<div class="tabs"><button class="p" id="t_table" onclick="setV('table')">Table</button><button id="t_board" onclick="setV('board')">Kanban board</button><button id="t_pipe" onclick="setV('pipe')">Pipeline by role</button><button id="t_tpl" onclick="setV('tpl')">Reply templates</button></div>
+<div class="bar" id="bar">
+<input id="q" placeholder="Search name, link, notes…" style="flex:1;min-width:160px">
+<select id="fr"></select><select id="fs"></select><select id="fo"></select>
+<button class="p" onclick="openF()">+ Add applicant</button>
+<button onclick="exp()">Export CSV</button>
+<button onclick="loadS()">Load sample data</button><button onclick="clr()">Clear all</button>
+</div>
+<div id="v_table"><div class="wrap"><table><thead><tr id="th"></tr></thead><tbody id="tb"></tbody></table></div>
+<p class="mu" id="empty" style="display:none;padding:12px">No applicants yet. Add your first one.</p></div>
+<div id="v_board" style="display:none"><div class="board" id="bd"></div></div>
+<div id="v_pipe" style="display:none"><div class="wrap"><table class="pt" id="pt"></table></div></div>
+<div id="v_tpl" class="tpl" style="display:none">
+<div class="bar"><select id="tsel" onchange="tplR()"></select><select id="tcand" onchange="prev()"></select><button onclick="cp()" id="cpb">Copy message</button><button onclick="rst()">Reset templates</button></div>
+<p class="mu" style="margin:4px 0">Edit the template below (use {name} and {role}; changes are saved). The filled-in message appears underneath.</p>
+<textarea id="ttxt" rows="9" oninput="TP[$('tsel').value].t=this.value;saveTP();prev()"></textarea>
+<div class="prev" id="tprev"></div></div>
+<p class="mu">Data is saved in this browser only. Use Export CSV to back up or share.</p>
+
+<div class="modal" id="m"><div class="box">
+<h3 id="mt" style="margin-top:0">Applicant</h3>
+<div class="grid">
+<label>Full name<input id="f_name"></label>
+<label>Role<select id="f_role"></select></label>
+<label>Origin<select id="f_origin"></select></label>
+<label>Source<select id="f_source"></select></label>
+<label>Status<select id="f_status"></select></label>
+<label>Owner<input id="f_owner" placeholder="e.g. Alex"></label>
+<label>Date logged<input type="date" id="f_date"></label>
+<label>Next action due<input type="date" id="f_due"></label>
+<label class="full">Email / contact<input id="f_email"></label>
+<label class="full">Portfolio / CV link<input id="f_link"></label>
+<label class="full">Next action<input id="f_next"></label>
+<div class="full chk" id="f_chk"></div>
+<label class="full">Links &amp; info verified?<select id="f_ver"><option>Not checked</option><option>Verified</option><option>Issues found</option></select></label>
+<label class="full">Notes<textarea id="f_notes" rows="3"></textarea></label>
+</div>
+<div style="display:flex;gap:8px;margin-top:12px;justify-content:space-between">
+<button onclick="del()" id="delb" style="color:var(--bad)">Delete</button>
+<span><button onclick="closeF()">Cancel</button> <button class="p" onclick="save()">Save</button></span>
+</div></div></div>
+
+<script>
+const ROLES=["Book Designer","Creative Director","Website Designer","Other"];
+const STATUS=["New","Missing materials","Must-have review","With scout review","Shortlisted","Interview","Offer","Hired","Rejected","On hold"];
+const ORIGIN=["New Applicant","Previous Applicant","Scout Sourced"];
+const SOURCE=["Zoho","OnlineJobs.ph","LinkedIn","Behance","Indeed","JobStreet","Upwork","Facebook","Instagram","Email","Scout","Other"];
+const MATS=["CV","Portfolio","Samples","Screening answers"];
+const COLS=[["name","Name"],["role","Role"],["origin","Origin"],["source","Source"],["status","Status"],["mats","Materials"],["ver","Verified"],["due","Due"],["next","Next action"],["owner","Owner"]];
+let D=[],sortK="date",sortD=-1,editId=null;
+try{D=JSON.parse(localStorage.getItem("demo_tracker")||"[]")}catch(e){D=[]}
+const $=id=>document.getElementById(id);
+const persist=()=>{try{localStorage.setItem("demo_tracker",JSON.stringify(D))}catch(e){}};
+const opts=(a,all)=>(all?`<option value="">${all}</option>`:"")+a.map(x=>`<option>${x}</option>`).join("");
+const esc=s=>String(s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+["role","origin","source","status"].forEach(k=>$("f_"+k).innerHTML=opts({role:ROLES,origin:ORIGIN,source:SOURCE,status:STATUS}[k]));
+$("fr").innerHTML=opts(ROLES,"All roles");$("fs").innerHTML=opts(STATUS,"All statuses");$("fo").innerHTML=opts(ORIGIN,"All origins");
+$("f_chk").innerHTML="<span class='mu'>Received:</span>"+MATS.map((m,i)=>`<label><input type="checkbox" id="c${i}"> ${m}</label>`).join("");
+$("th").innerHTML=COLS.map(c=>`<th onclick="srt('${c[0]}')">${c[1]}</th>`).join("");
+["q","fr","fs","fo"].forEach(i=>$(i).addEventListener("input",render));
+function srt(k){sortD=sortK===k?-sortD:1;sortK=k;render()}
+function today(){return new Date().toISOString().slice(0,10)}
+function openF(id){editId=id||null;const a=D.find(x=>x.id===id)||{role:ROLES[0],origin:ORIGIN[0],source:SOURCE[0],status:STATUS[0],date:today(),mats:[],ver:"Not checked"};
+$("mt").textContent=id?"Edit applicant":"Add applicant";$("delb").style.display=id?"":"none";
+["name","role","origin","source","status","owner","date","due","email","link","next","ver","notes"].forEach(k=>$("f_"+k).value=a[k]||"");
+MATS.forEach((m,i)=>$("c"+i).checked=(a.mats||[]).includes(m));$("m").classList.add("on")}
+function closeF(){$("m").classList.remove("on")}
+function save(){const n=$("f_name").value.trim();if(!n){$("f_name").focus();return}
+const o={id:editId||Date.now().toString(36),mats:MATS.filter((m,i)=>$("c"+i).checked)};
+["name","role","origin","source","status","owner","date","due","email","link","next","ver","notes"].forEach(k=>o[k]=$("f_"+k).value.trim());
+const dup=D.find(x=>x.id!==o.id&&(x.name.toLowerCase()===n.toLowerCase()||(o.email&&x.email.toLowerCase()===o.email.toLowerCase())));
+if(dup&&!confirm("Possible duplicate of "+dup.name+" ("+dup.role+"). Save anyway?"))return;
+if(editId)D=D.map(x=>x.id===editId?o:x);else D.push(o);persist();closeF();render()}
+function del(){if(confirm("Delete this applicant?")){D=D.filter(x=>x.id!==editId);persist();closeF();render()}}
+function setS(id,v){const a=D.find(x=>x.id===id);a.status=v;persist();render()}
+function render(){renderAll();const q=$("q").value.toLowerCase(),r=$("fr").value,s=$("fs").value,o=$("fo").value,t=today();
+let L=D.filter(a=>(!r||a.role===r)&&(!s||a.status===s)&&(!o||a.origin===o)&&(!q||[a.name,a.email,a.link,a.notes,a.next,a.owner].join(" ").toLowerCase().includes(q)));
+L.sort((a,b)=>{const x=sortK==="mats"?(a.mats||[]).length:(a[sortK]||""),y=sortK==="mats"?(b.mats||[]).length:(b[sortK]||"");return (x>y?1:x<y?-1:0)*sortD});
+$("tb").innerHTML=L.map(a=>{const od=a.due&&a.due<t&&!["Hired","Rejected"].includes(a.status);
+return `<tr><td><a href="#" onclick="openF('${a.id}');return false"><b>${esc(a.name)}</b></a>${a.link&&/^https?:\/\//.test(a.link)?` <a href="${esc(a.link)}" target="_blank" rel="noopener">↗</a>`:""}<div class="mu">${esc(a.email)}</div></td>
+<td>${esc(a.role)}</td><td><span class="tag">${esc(a.origin)}</span></td><td>${esc(a.source)}</td>
+<td><select onchange="setS('${a.id}',this.value)">${STATUS.map(x=>`<option${x===a.status?" selected":""}>${x}</option>`).join("")}</select></td>
+<td>${(a.mats||[]).length}/${MATS.length}</td><td>${esc(a.ver)}</td>
+<td class="${od?"over":""}">${esc(a.due)}${od?" (overdue)":""}</td><td>${esc(a.next)}</td><td>${esc(a.owner)}</td></tr>`}).join("");
+$("empty").style.display=D.length?"none":"block";
+const c=s=>D.filter(a=>a.status===s).length,od=D.filter(a=>a.due&&a.due<t&&!["Hired","Rejected"].includes(a.status)).length;
+$("stats").innerHTML=[["Total",D.length],["Shortlisted",c("Shortlisted")],["Interview",c("Interview")],["Missing materials",c("Missing materials")],["Overdue",od]].map(x=>`<div class="stat"><b>${x[1]}</b><span>${x[0]}</span></div>`).join("")}
+function exp(){const h=["name","role","origin","source","status","owner","date","due","email","link","next","ver","mats","notes"];
+const rows=[h.join(",")].concat(D.map(a=>h.map(k=>'"'+String(k==="mats"?(a.mats||[]).join("; "):a[k]||"").replace(/"/g,'""')+'"').join(",")));
+const b=new Blob([rows.join("\n")],{type:"text/csv"}),u=URL.createObjectURL(b),l=document.createElement("a");l.href=u;l.download="applicants-sample.csv";l.click()}
+let V="table";
+const TPL0=[
+{n:"Acknowledge application",t:"Hi {name},\n\nThank you for applying for the {role} role at [Company Name] We have received your application and will review it shortly. If your profile is a fit, we will contact you with the next steps.\n\nBest regards,\n[Company Name] Hiring Team"},
+{n:"Request missing materials",t:"Hi {name},\n\nThank you for your interest in the {role} role at [Company Name] To complete your application, please send us the following: [CV / portfolio link / work samples / screening answers].\n\nPlease reply within [number] days so we can include you in our review.\n\nBest regards,\n[Company Name] Hiring Team"},
+{n:"Invite to apply (sourced)",t:"Hi {name},\n\nWe came across your work and think you could be a strong fit for our {role} role at [Company Name] This is a remote position. If you are interested, please reply with your CV, portfolio link and a few work samples.\n\nBest regards,\n[Company Name] Hiring Team"},
+{n:"Shortlisted: next steps",t:"Hi {name},\n\nThank you for your patience. We are pleased to let you know you have been shortlisted for the {role} role at [Company Name] Our team will reach out shortly with the next steps.\n\nBest regards,\n[Company Name] Hiring Team"},
+{n:"Follow-up (no response)",t:"Hi {name},\n\nJust following up on my earlier message about the {role} role at [Company Name] Please let us know if you are still interested and send any remaining materials.\n\nBest regards,\n[Company Name] Hiring Team"},
+{n:"Not moving forward",t:"Hi {name},\n\nThank you for your interest in the {role} role at [Company Name] After careful review, we will not be moving forward with your application at this time. We appreciate the time you put in and wish you all the best.\n\nBest regards,\n[Company Name] Hiring Team"}];
+let TP;try{TP=JSON.parse(localStorage.getItem("demo_tpl")||"null")}catch(e){}
+if(!Array.isArray(TP)||!TP.length)TP=JSON.parse(JSON.stringify(TPL0));
+function saveTP(){try{localStorage.setItem("demo_tpl",JSON.stringify(TP))}catch(e){}}
+function rst(){if(confirm("Reset all templates to defaults?")){TP=JSON.parse(JSON.stringify(TPL0));saveTP();tplR()}}
+function setV(v){V=v;["table","board","pipe","tpl"].forEach(x=>{$("v_"+x).style.display=x===v?"":"none";$("t_"+x).classList.toggle("p",x===v)});$("bar").style.display=(v==="table"||v==="board")?"":"none";renderAll()}
+function renderAll(){if(V==="board")boardR();else if(V==="pipe")pipeR();else if(V==="tpl")tplR()}
+function filt(){const q=$("q").value.toLowerCase(),r=$("fr").value,s=$("fs").value,o=$("fo").value;return D.filter(a=>(!r||a.role===r)&&(!s||a.status===s)&&(!o||a.origin===o)&&(!q||[a.name,a.email,a.link,a.notes,a.next,a.owner].join(" ").toLowerCase().includes(q)))}
+let dragId=null;
+function boardR(){const L=filt(),t=today();$("bd").innerHTML=STATUS.map(s=>{const c=L.filter(a=>a.status===s);return `<div class="col" ondragover="event.preventDefault();this.classList.add('dz')" ondragleave="this.classList.remove('dz')" ondrop="this.classList.remove('dz');if(dragId)setS(dragId,'${s}')"><h4><span>${s}</span><span>${c.length}</span></h4>${c.map(a=>{const od=a.due&&a.due<t&&!["Hired","Rejected"].includes(a.status);return `<div class="cd" draggable="true" ondragstart="dragId='${a.id}'"><a href="#" onclick="openF('${a.id}');return false"><b>${esc(a.name)}</b></a><div class="mu">${esc(a.role)}</div><span class="tag">${esc(a.origin)}</span>${a.due?`<div class="${od?"over":"mu"}">Due ${esc(a.due)}</div>`:""}<select onchange="setS('${a.id}',this.value)">${STATUS.map(x=>`<option${x===a.status?" selected":""}>${x}</option>`).join("")}</select></div>`}).join("")}</div>`}).join("")}
+function pipeR(){const adv=["Shortlisted","Interview","Offer","Hired"];let h="<thead><tr><th>Role</th>"+STATUS.map(s=>`<th>${s}</th>`).join("")+"<th>Total</th><th>Shortlisted+</th></tr></thead><tbody>";const roles=ROLES.filter(r=>r!=="Other"||D.some(a=>a.role==="Other"));roles.forEach(r=>{const L=D.filter(a=>a.role===r),n=L.filter(a=>adv.includes(a.status)).length;h+=`<tr><td><b>${r}</b></td>`+STATUS.map(s=>`<td>${L.filter(a=>a.status===s).length||"·"}</td>`).join("")+`<td><b>${L.length}</b></td><td>${n}${L.length?" ("+Math.round(n/L.length*100)+"%)":""}</td></tr>`});const n=D.filter(a=>adv.includes(a.status)).length;h+="<tr><td><b>All roles</b></td>"+STATUS.map(s=>`<td><b>${D.filter(a=>a.status===s).length||"·"}</b></td>`).join("")+`<td><b>${D.length}</b></td><td><b>${n}</b></td></tr></tbody>`;$("pt").innerHTML=h}
+function tplR(){const ts=$("tsel"),cs=$("tcand"),ti=ts.value||0,ci=cs.value;ts.innerHTML=TP.map((x,i)=>`<option value="${i}">${esc(x.n)}</option>`).join("");ts.value=ti<TP.length?ti:0;cs.innerHTML='<option value="">Pick an applicant</option>'+D.map(a=>`<option value="${a.id}">${esc(a.name)} (${esc(a.role)})</option>`).join("");cs.value=ci;$("ttxt").value=TP[ts.value].t;prev()}
+function msg(){const a=D.find(x=>x.id===$("tcand").value);return $("ttxt").value.replace(/\{name\}/g,a?a.name:"[Name]").replace(/\{role\}/g,a?a.role:"[Role]")}
+function prev(){$("tprev").textContent=msg()}
+function cp(){const b=$("cpb");try{navigator.clipboard.writeText(msg()).then(()=>{b.textContent="Copied";setTimeout(()=>b.textContent="Copy message",1500)})}catch(e){b.textContent="Select the text and copy"}}
+function dd(n){const x=new Date();x.setDate(x.getDate()+n);return x.toISOString().slice(0,10)}
+function sample(){const A=[
+["Maya Santos","Book Designer","New Applicant","OnlineJobs.ph","Shortlisted",4,"Verified",3,"Send to hiring manager","Alex"],
+["Liam Carter","Book Designer","Scout Sourced","Behance","With scout review",4,"Verified",2,"Await scout critique","Alex"],
+["Priya Nair","Book Designer","New Applicant","LinkedIn","Missing materials",2,"Not checked",-2,"Request portfolio and samples","Alex"],
+["Tomas Rivera","Book Designer","Previous Applicant","Email","Must-have review",3,"Not checked",1,"Check must-haves","Sam"],
+["Chloe Bennett","Book Designer","New Applicant","Indeed","Rejected",3,"Issues found",0,"Send decline message","Sam"],
+["Daniel Okoye","Creative Director","Scout Sourced","LinkedIn","Interview",4,"Verified",5,"Confirm interview slot","Alex"],
+["Sofia Marino","Creative Director","New Applicant","Zoho","Must-have review",3,"Not checked",-1,"Complete initial review","Alex"],
+["Hana Kobayashi","Creative Director","Scout Sourced","Behance","Shortlisted",4,"Verified",4,"Prepare candidate summary","Sam"],
+["Ben Whitaker","Creative Director","New Applicant","Upwork","On hold",2,"Not checked",10,"Revisit next round","Sam"],
+["Aisha Rahman","Website Designer","New Applicant","OnlineJobs.ph","New",1,"Not checked",1,"Log details and check links","Alex"],
+["Jonas Weber","Website Designer","Scout Sourced","Behance","With scout review",4,"Verified",3,"Await scout critique","Sam"],
+["Isabel Cruz","Website Designer","Previous Applicant","JobStreet","Offer",4,"Verified",2,"Follow up on offer","Alex"],
+["Noah Fischer","Website Designer","New Applicant","Indeed","Missing materials",1,"Not checked",-3,"Request CV and samples","Sam"],
+["Zara Ahmed","Website Designer","New Applicant","Facebook","Hired",4,"Verified",0,"Hand off to onboarding","Alex"]];
+const M=["CV","Portfolio","Samples","Screening answers"];
+return A.map((a,i)=>({id:"s"+i,name:a[0],role:a[1],origin:a[2],source:a[3],status:a[4],mats:M.slice(0,a[5]),ver:a[6],due:dd(a[7]),next:a[8],owner:a[9],date:dd(-7-i),email:a[0].toLowerCase().replace(" ",".")+"@example.com",link:"https://example.com/portfolio",notes:"Fictional sample candidate."}))}
+function loadS(){if(D.length&&!confirm("Replace current applicants with sample data?"))return;D=sample();persist();render()}
+function clr(){if(confirm("Remove all applicants?")){D=[];persist();render()}}
+try{if(!D.length&&!localStorage.getItem("demo_init")){D=sample();persist();localStorage.setItem("demo_init","1")}}catch(e){if(!D.length)D=sample()}
+render();
+</script></body></html>
