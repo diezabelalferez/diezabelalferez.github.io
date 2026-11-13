@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Case Study: DTR CHECK | Diezabel Alferez</title>
+<meta name="description" content="A payroll check that compares DTRs against the corrected biometric and finds every mismatch before payday.">
+<style>
+:root{--bg:#f6f9f9;--ink:#12292b;--muted:#4d6567;--teal:#0f6b6e;--teal-soft:#d9eceb;--line:#c5d9d8;--card:#fff;--mark:#ffe14d;--markink:#4a3b00}
+@media (prefers-color-scheme:dark){:root{--bg:#0e1b1c;--ink:#e6f2f1;--muted:#9bb5b6;--teal:#5fc4c0;--teal-soft:#16393a;--line:#27484a;--card:#132527}}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.65 Georgia,"Times New Roman",serif}
+.wrap{max-width:860px;margin:0 auto;padding:clamp(24px,5vw,56px) 20px}
+a{color:var(--teal)}
+a:focus-visible{outline:3px solid var(--teal);outline-offset:3px}
+.back{font-size:15px;color:var(--muted);text-decoration:none}
+h1{font-family:Georgia,"Iowan Old Style",serif;font-weight:700;font-size:clamp(30px,6vw,52px);line-height:1.12;margin:28px 0 16px;max-width:18em}
+h2{font-family:Georgia,serif;font-size:clamp(22px,3.5vw,28px);margin:56px 0 12px}
+p{margin:0 0 14px;max-width:62ch}
+.lede{font-size:19px;color:var(--muted)}
+.demo{display:inline-block;background:var(--mark);color:var(--markink);padding:3px 10px;font-size:14px;font-weight:600;border-radius:3px}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:0;border-top:2px solid var(--ink);border-bottom:1px solid var(--line);margin:32px 0}
+.facts div{padding:14px 14px 14px 0}
+.facts b{display:block;font-family:Georgia,serif;font-size:30px;line-height:1.1}
+.facts span{font-size:14px;color:var(--muted)}
+.scroll{overflow-x:auto;background:var(--card);border:1px solid var(--line)}
+table{border-collapse:collapse;width:100%;min-width:640px;font-size:15px}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:14px;color:var(--muted);font-weight:600;background:var(--teal-soft)}
+td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+mark{background:var(--mark);color:var(--markink);padding:1px 4px;border-radius:2px}
+.cap{font-size:14px;color:var(--muted);margin-top:8px}
+ol.steps{padding-left:22px;max-width:62ch}
+ol.steps li{margin-bottom:10px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:28px}
+.two h3{font-size:17px;margin:0 0 8px}
+.two ul{margin:0;padding-left:20px}
+.cta{margin-top:56px;padding:28px;background:var(--teal-soft);color:var(--ink);border-left:4px solid var(--teal)}
+.cta h2{margin:0 0 8px}
+.cta a{font-weight:600}
+@media(max-width:620px){.two{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main class="wrap">
+<a class="back" href="https://diezabelalferez.github.io/">&larr; Back to portfolio</a>
+
+<h1>DTR CHECK: catching payroll errors before payday</h1>
+<p class="lede">A repeatable check that compares each employee's DTR against the corrected biometric printout. It lists every mismatch, with the cause and the hours at stake.</p>
+<span class="demo">Demo built on fake data. No real employees or company records.</span>
+
+<div class="facts">
+<div><b>6 of 6</b><span>planted errors found</span></div>
+<div><b>0</b><span>false alarms</span></div>
+<div><b>102.90</b><span>hours of gap caught</span></div>
+<div><b>10</b><span>employees checked</span></div>
+</div>
+
+<h2>The problem</h2>
+<p>Payroll runs on the DTR. The biometric is the true record. When the two disagree, someone gets paid wrong.</p>
+<p>I have seen this in real payroll. Two DTR pages were missing from a biometric upload. Fifteen people were affected. They were paid on the next payroll, after an incident report and a lot of follow-up.</p>
+<p>Checking page by page is slow and easy to get wrong. So I built a check that does not skip anything.</p>
+
+<h2>What I built</h2>
+<p>I trigger it with two words: <strong>DTR CHECK</strong>. I give it the DTR and the corrected biometric for one pay period. It returns one report.</p>
+<ol class="steps">
+<li>It compares page counts and headcount first. A missing employee shows up here.</li>
+<li>It matches every employee, day by day, on Time In, Time Out and hours.</li>
+<li>It re-adds each daily column and compares it with the printed total.</li>
+<li>It names the cause of each issue, not only the changed total.</li>
+<li>It lists the fix needed before payroll is released.</li>
+</ol>
+
+<h2>The test</h2>
+<p>I made a sample pay period: Oct 11&ndash;25, 2026, payday Oct 30. Ten employees, management and staff. I planted six errors and ran the check without looking at the answer key.</p>
+<div class="scroll">
+<table>
+<thead><tr><th>Issue</th><th>Employee</th><th>What the check found</th><th class="num">Hours to fix</th></tr></thead>
+<tbody>
+<tr><td>Missing employee</td><td>E010</td><td>Not in the DTR at all. Biometric shows 10 days.</td><td class="num"><mark>+81.93</mark></td></tr>
+<tr><td>Missing log</td><td>E003</td><td>Oct 14: no Time Out. Biometric has 17:09.</td><td class="num"><mark>+8.13</mark></td></tr>
+<tr><td>Missing log</td><td>E008</td><td>Oct 20: no Time In. Biometric has 08:04.</td><td class="num"><mark>+7.93</mark></td></tr>
+<tr><td>Time mismatch</td><td>E002</td><td>Oct 13: Time Out 17:05 on DTR, 19:10 on biometric.</td><td class="num"><mark>+2.08</mark></td></tr>
+<tr><td>Time mismatch</td><td>E005</td><td>Oct 16: Time In 08:45 on DTR, 07:55 on biometric.</td><td class="num"><mark>+0.83</mark></td></tr>
+<tr><td>Total mismatch</td><td>E007</td><td>Daily logs match. Printed total is 79.76. Correct total is 81.76.</td><td class="num"><mark>+2.00</mark></td></tr>
+</tbody>
+</table>
+</div>
+<p class="cap">Four employees had no issues and were cleared. DTR grand total: 719.53 hrs. Biometric: 822.43 hrs.</p>
+
+<h2>Result</h2>
+<p>All six errors were found. Nothing was flagged by mistake. The report opens with the page-count difference, because that points to the biggest problem.</p>
+<p>The last error is the one people miss. Every daily row was right. Only the printed total was wrong. The check re-adds the rows, so it catches this.</p>
+
+<h2>What this shows about how I work</h2>
+<div class="two">
+<div>
+<h3>Payroll side</h3>
+<ul>
+<li>Biometric is the source of truth.</li>
+<li>Checks run before payday, not after.</li>
+<li>Each issue has a cause and a fix.</li>
+</ul>
+</div>
+<div>
+<h3>Systems side</h3>
+<ul>
+<li>One trigger phrase, same steps every period.</li>
+<li>Tested on a known answer key.</li>
+<li>Easy to adjust for your cutoffs and rules.</li>
+</ul>
+</div>
+</div>
+
+<div class="cta">
+<h2>Want this for your payroll?</h2>
+<p>I can set up a check like this around your cutoffs, your timekeeping files and your approval steps.</p>
+<p><a href="mailto:diezabelalferez.va@gmail.com">diezabelalferez.va@gmail.com</a></p>
+</div>
+</main>
+</body>
+</html>
